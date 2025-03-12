@@ -12,3 +12,9 @@ server.log
 *.toml
 
 !*.example.toml
+
+plan.txt
+
+*.log
+
+!*.example.log
