@@ -25,7 +25,7 @@ type AnalizationResult struct {
 	Err           error
 }
 
-func FormatAnalizationResult(ar AnalizationResult) map[string]interface{} { // ээээх, костыли мои велосипеды...
+func FormatAnalizationResult(ar AnalizationResult) map[string]interface{} {
 	var formatResult = map[string]interface{}{}
 
 	formatResult["total_count"] = len(ar.FoundBadWords)
@@ -102,7 +102,7 @@ func RequestAndAnalize(wg *sync.WaitGroup, resultChan chan<- AnalizationResult, 
 		wg.Done()
 		return
 	}
-	err = errors.New("Если ты получил эту ошибку, то твоя душа не вознесется во время суда божего")
+	err = errors.New("Error occured while analizing data")
 	result.Err = err
 
 	resultChan <- result
@@ -136,18 +136,18 @@ func SendRequests(c config.Config, l *zap.SugaredLogger) {
 		close(recieverChan)
 	}()
 
-	data := map[string]interface{}{}
+	outputResult := map[string]interface{}{}
 
 	for recievedData := range recieverChan {
 		if recievedData.Err != nil {
 			l.Fatalf("Error occured while requesting and analizing the data: %s", recievedData.Err)
 		}
 
-		data[recievedData.URL] = FormatAnalizationResult(recievedData)
+		outputResult[recievedData.URL] = FormatAnalizationResult(recievedData)
 
 	}
 
-	if err := encoder.Encode(data); err != nil {
+	if err := encoder.Encode(outputResult); err != nil {
 		l.Error("failed to write data to output file")
 	}
 }
