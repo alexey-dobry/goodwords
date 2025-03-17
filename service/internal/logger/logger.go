@@ -7,9 +7,9 @@ import (
 
 func InitLogger() *zap.SugaredLogger {
 	config := zap.Config{
-		Encoding:         "console", // JSON-формат логов
+		Encoding:         "console",
 		Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
-		OutputPaths:      []string{"stdout", "../logs/service.log"}, // Выводим и в консоль, и в файл
+		OutputPaths:      []string{"stdout", "../logs/service.log"},
 		ErrorOutputPaths: []string{"stderr"},
 		EncoderConfig: zapcore.EncoderConfig{
 			TimeKey:     "timestamp",
