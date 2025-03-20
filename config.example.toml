@@ -1,0 +1,22 @@
+prohibited_words = [
+  "good python",
+  "bad gopher",
+]
+
+[[endpoints]]
+url = "http://localhost:8000/one"
+max_time = 10
+max_retries = 4
+return_data = "text"
+
+[[endpoints]]
+url = "http://localhost:8000/two"
+max_time = 10
+max_retries = 4
+return_data = "text"
+
+[[endpoints]]
+url = "http://localhost:8000/three"
+max_time = 10
+max_retries = 4
+return_data = "array"

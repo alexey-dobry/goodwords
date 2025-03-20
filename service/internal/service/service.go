@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -36,7 +35,7 @@ func FormatAnalizationResult(ar AnalizationResult) map[string]interface{} {
 		if ar.DataType == "text" {
 			wordSlice = append(wordSlice, map[string]interface{}{"word": value, "index": key})
 		} else if ar.DataType == "array" {
-			wordSlice = append(wordSlice, map[string]interface{}{"word": strings.Split(value, "/")[0], "expr_index": strings.Split(value, "/")[1], "index": key})
+			wordSlice = append(wordSlice, map[string]interface{}{"word": value, "expr_index": strings.Split(key, "/")[1], "index": strings.Split(key, "/")[0]})
 		}
 	}
 
@@ -109,25 +108,18 @@ func RequestAndAnalize(wg *sync.WaitGroup, resultChan chan<- AnalizationResult, 
 	wg.Done()
 }
 
-func SendRequests(c config.Config, l *zap.SugaredLogger) {
+func SendRequests(c *config.Config, l *zap.SugaredLogger) {
 	var wg sync.WaitGroup
 	var outputPath string = fmt.Sprintf("../output/%s.json", strconv.FormatInt(time.Now().Unix(), 10))
-
-	file, err := os.Create(outputPath)
-	if err != nil {
-		log.Fatalf("Error occurred while trying to create output file: %s", err)
-	}
-
-	encoder := json.NewEncoder(file)
 
 	recieverChan := make(chan AnalizationResult)
 
 	for _, endpointData := range c.ListOfEndpoints {
 		wg.Add(1)
 
-		go func(data models.EndpointData) {
-			RequestAndAnalize(&wg, recieverChan, endpointData, c.BadWords)
-		}(endpointData)
+		go func(wg *sync.WaitGroup, recieverChan chan AnalizationResult, data models.EndpointData, c *config.Config) {
+			RequestAndAnalize(wg, recieverChan, data, c.BadWords)
+		}(&wg, recieverChan, endpointData, c)
 
 	}
 
@@ -136,9 +128,12 @@ func SendRequests(c config.Config, l *zap.SugaredLogger) {
 		close(recieverChan)
 	}()
 
+	outputResultChan := make(chan map[string]interface{}, 1)
+
 	outputResult := map[string]interface{}{}
 
 	for recievedData := range recieverChan {
+
 		if recievedData.Err != nil {
 			l.Fatalf("Error occured while requesting and analizing the data: %s", recievedData.Err)
 		}
@@ -147,7 +142,19 @@ func SendRequests(c config.Config, l *zap.SugaredLogger) {
 
 	}
 
-	if err := encoder.Encode(outputResult); err != nil {
-		l.Error("failed to write data to output file")
+	outputResultChan <- outputResult
+
+	formattedJSON, err := json.MarshalIndent(<-outputResultChan, "", "    ")
+
+	close(outputResultChan)
+
+	file, err := os.Create(outputPath)
+	if err != nil {
+		l.Fatalf("Error occurred while trying to create output file: %s", err)
+	}
+
+	_, err = file.Write(formattedJSON)
+	if err != nil {
+		l.Error("Failed to write data into file")
 	}
 }

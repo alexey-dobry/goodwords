@@ -1,7 +1,8 @@
 package config
 
 import (
-	"log"
+	"errors"
+	"fmt"
 
 	"github.com/alexey-dobry/goodwords/internal/models"
 	cfg "github.com/spf13/viper"
@@ -12,7 +13,7 @@ type Config struct {
 	ListOfEndpoints []models.EndpointData
 }
 
-func ReadConfig() *Config {
+func ReadConfig() (*Config, error) {
 
 	var configData Config
 
@@ -21,16 +22,16 @@ func ReadConfig() *Config {
 	cfg.AddConfigPath("../")
 
 	if err := cfg.ReadInConfig(); err != nil {
-		log.Fatalf("failed to read config: %s", err)
+		return nil, errors.New(fmt.Sprintf("Failed to read config: %s", err))
 	}
 
-	if err := cfg.UnmarshalKey("prohibited_words", configData.BadWords); err != nil {
-		log.Fatalf("Failed to write prohibied_words data from config: %s", err)
+	if err := cfg.UnmarshalKey("prohibited_words", &configData.BadWords); err != nil {
+		return nil, errors.New(fmt.Sprintf("Failed to write prohibied_words data from config: %s", err))
 	}
 
-	if err := cfg.UnmarshalKey("endpoints", configData.ListOfEndpoints); err != nil {
-		log.Fatalf("Failed to write endpoints data from config: %s", err)
+	if err := cfg.UnmarshalKey("endpoints", &configData.ListOfEndpoints); err != nil {
+		return nil, errors.New(fmt.Sprintf("Failed to write endpoints data from config: %s", err))
 	}
 
-	return &configData
+	return &configData, nil
 }

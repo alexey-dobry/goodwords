@@ -5,7 +5,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func InitLogger() *zap.SugaredLogger {
+func InitLogger() (*zap.SugaredLogger, error) {
 	config := zap.Config{
 		Encoding:         "console",
 		Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
@@ -20,9 +20,12 @@ func InitLogger() *zap.SugaredLogger {
 		},
 	}
 
-	l, _ := config.Build()
+	l, err := config.Build()
+	if err != nil {
+		return nil, err
+	}
 
 	logger := l.Sugar()
 
-	return logger
+	return logger, nil
 }
