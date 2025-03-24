@@ -6,6 +6,7 @@
 server.log
 
 *.json
+!*example.json
 
 !*.example.json
 
@@ -18,3 +19,5 @@ plan.txt
 *.log
 
 !*.example.log
+
+/testservers/

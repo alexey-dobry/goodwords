@@ -1,11 +1,13 @@
 package main
 
 import (
+	"errors"
 	"log"
+	"os"
 
+	"github.com/alexey-dobry/goodwords/internal/analyser"
 	"github.com/alexey-dobry/goodwords/internal/config"
 	"github.com/alexey-dobry/goodwords/internal/logger"
-	"github.com/alexey-dobry/goodwords/internal/service"
 )
 
 func main() {
@@ -16,6 +18,14 @@ func main() {
 
 	l.Info("Successfully initialized logger")
 
+	if _, err := os.Stat("../output"); errors.Is(err, os.ErrNotExist) {
+		if err := os.Mkdir("../output", os.ModePerm); err != nil {
+			l.Fatal("Failed to create output directory")
+		}
+
+		l.Info("Successfully created output directory")
+	}
+
 	c, err := config.ReadConfig()
 	if err != nil {
 		l.Fatal(err)
@@ -23,7 +33,7 @@ func main() {
 
 	l.Info("Successfully read config")
 
-	service.SendRequests(c, l)
+	analyser.RunAnalyser(c, l)
 
 	l.Info("Programm execution complete")
 }

@@ -1,0 +1,10 @@
+services:
+  goodwords:
+    build: .
+    container_name: goodwords-service
+    volumes: 
+      - ./config.toml:/app/config.toml
+      - ./logs/:/app/logs/
+      - ./output/:/app/output/
+    extra_hosts:
+      - host.docker.internal:host-gateway

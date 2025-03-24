@@ -1,0 +1,31 @@
+{
+    "http://host.docker.internal:8000/three": {
+        "total_count": 3,
+        "words": [
+            {
+                "expr_index": "0",
+                "index": "11",
+                "word": "bad gopher"
+            },
+            {
+                "expr_index": "1",
+                "index": "6",
+                "word": "good python"
+            },
+            {
+                "expr_index": "1",
+                "index": "18",
+                "word": "bad gopher"
+            }
+        ]
+    },
+    "http://host.docker.internal:8000/two": {
+        "total_count": 1,
+        "words": [
+            {
+                "index": "21",
+                "word": "bad gopher"
+            }
+        ]
+    }
+}
