@@ -97,7 +97,7 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 		return
 	}
 
-	err = fmt.Errorf("Error occured while analyzing data")
+	err = fmt.Errorf("Wrong return datatype on endpoint: %s", ed.URL)
 	result.Err = err
 
 	resultChan <- result

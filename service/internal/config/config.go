@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	BadWords        []string              `validate:"required"`
-	ListOfEndpoints []models.EndpointData `validate:"required"`
+	ListOfEndpoints []models.EndpointData `validate:"required,dive"`
 }
 
 func ReadConfig() (*Config, error) {
@@ -32,12 +32,12 @@ func ReadConfig() (*Config, error) {
 		return nil, errors.New(fmt.Sprintf("Failed to write prohibied_words data from config: %s", err))
 	}
 
-	if err := V.Struct(configData); err != nil {
-		return nil, errors.New(fmt.Sprintf("Config data validatiopn failed: %s", err))
-	}
-
 	if err := cfg.UnmarshalKey("endpoints", &configData.ListOfEndpoints); err != nil {
 		return nil, errors.New(fmt.Sprintf("Failed to write endpoints data from config: %s", err))
+	}
+
+	if err := V.Struct(configData); err != nil {
+		return nil, errors.New(fmt.Sprintf("Config data validatiopn failed: %s", err))
 	}
 
 	return &configData, nil
