@@ -19,5 +19,3 @@ plan.txt
 *.log
 
 !*.example.log
-
-/testservers/
