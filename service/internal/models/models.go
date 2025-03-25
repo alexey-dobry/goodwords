@@ -1,10 +1,8 @@
 package models
 
-import _ "github.com/alexey-dobry/goodwords/internal/validator"
-
 type EndpointData struct {
-	URL        string `mapstructure:"url" validate:"required"`
-	MaxTime    int    `mapstructure:"max_time" validate:"required"`
-	MaxRetries int    `mapstructure:"max_retries" validate:"required"`
-	ReturnData string `mapstructure:"return_data" validate:"required"`
+	URL        string `validate:"required" mapstructure:"url"`
+	MaxTime    int    `validate:"required" mapstructure:"max_time"`
+	MaxRetries int    `validate:"required" mapstructure:"max_retries"`
+	ReturnData string `validate:"required" mapstructure:"return_data"`
 }

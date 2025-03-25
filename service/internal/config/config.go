@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/alexey-dobry/goodwords/internal/models"
-	_ "github.com/alexey-dobry/goodwords/internal/validator"
+	"github.com/go-playground/validator/v10"
 	cfg "github.com/spf13/viper"
 )
 
@@ -18,6 +18,8 @@ func ReadConfig() (*Config, error) {
 
 	var configData Config
 
+	var V = validator.New()
+
 	cfg.SetConfigName("config")
 	cfg.SetConfigType("toml")
 	cfg.AddConfigPath("../")
@@ -28,6 +30,10 @@ func ReadConfig() (*Config, error) {
 
 	if err := cfg.UnmarshalKey("prohibited_words", &configData.BadWords); err != nil {
 		return nil, errors.New(fmt.Sprintf("Failed to write prohibied_words data from config: %s", err))
+	}
+
+	if err := V.Struct(configData); err != nil {
+		return nil, errors.New(fmt.Sprintf("Config data validatiopn failed: %s", err))
 	}
 
 	if err := cfg.UnmarshalKey("endpoints", &configData.ListOfEndpoints); err != nil {
