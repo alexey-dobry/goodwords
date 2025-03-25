@@ -5,12 +5,13 @@ import (
 	"fmt"
 
 	"github.com/alexey-dobry/goodwords/internal/models"
+	_ "github.com/alexey-dobry/goodwords/internal/validator"
 	cfg "github.com/spf13/viper"
 )
 
 type Config struct {
-	BadWords        []string
-	ListOfEndpoints []models.EndpointData
+	BadWords        []string              `validate:"required"`
+	ListOfEndpoints []models.EndpointData `validate:"required"`
 }
 
 func ReadConfig() (*Config, error) {
