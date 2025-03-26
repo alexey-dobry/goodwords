@@ -12,8 +12,7 @@ COPY ./service/go.mod .
 COPY ./service/go.sum .
 RUN go mod download
 
-COPY ./service/cmd .
-COPY ./service/internal .
+COPY ./service/ .
 RUN go build -ldflags="-s -w" -o /app/service ./cmd
 
 FROM scratch

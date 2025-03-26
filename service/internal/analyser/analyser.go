@@ -2,7 +2,6 @@ package analyser
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -52,7 +51,7 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 		if err == nil {
 			break
 		} else if i == ed.MaxRetries-1 {
-			result.Err = errors.New("too many retries")
+			result.Err = fmt.Errorf("too many retries")
 			resultChan <- result
 			return
 		}
@@ -65,7 +64,7 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 	}
 
 	if response.StatusCode != 200 {
-		result.Err = errors.New(fmt.Sprintf("Response staus: %s", response.StatusCode))
+		result.Err = fmt.Errorf("Response staus: %s", response.StatusCode)
 		resultChan <- result
 		return
 	}
@@ -75,7 +74,7 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 
 		err = json.NewDecoder(response.Body).Decode(&responseContents)
 		if err != nil {
-			result.Err = errors.New("Error parsing data from endpoint")
+			result.Err = fmt.Errorf("Error parsing data from endpoint")
 			resultChan <- result
 			return
 		}
@@ -91,7 +90,7 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 
 		err = json.NewDecoder(response.Body).Decode(&responseContents)
 		if err != nil {
-			result.Err = errors.New("Error parsing data from endpoint")
+			result.Err = fmt.Errorf("Error parsing data from endpoint")
 			resultChan <- result
 			return
 		}
@@ -103,7 +102,7 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 		return
 	}
 
-	err = errors.New(fmt.Sprintf("Wrong return datatype on endpoint: %s", ed.URL))
+	err = fmt.Errorf("Wrong return datatype on endpoint: %s", ed.URL)
 	result.Err = err
 
 	resultChan <- result
@@ -132,7 +131,7 @@ func SendRequests(c *config.Config, l *zap.SugaredLogger) []byte {
 	outputResult := map[string]interface{}{}
 
 	for recievedData := range recieverChan {
-		if recievedData.Err != nil && recievedData.Err == fmt.Errorf("too many retries") {
+		if recievedData.Err != nil && recievedData.Err.Error() == "too many retries" {
 			outputResult[recievedData.URL] = "too many retries"
 
 			l.Error("Error occured while requesting and analysing the data from ", recievedData.URL, " : ", recievedData.Err)
