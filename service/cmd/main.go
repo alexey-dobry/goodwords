@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"log"
 	"os"
 
@@ -18,13 +17,7 @@ func main() {
 
 	l.Info("Successfully initialized logger")
 
-	if _, err := os.Stat("../output"); errors.Is(err, os.ErrNotExist) {
-		if err := os.Mkdir("../output", os.ModePerm); err != nil {
-			l.Fatal("Failed to create output directory")
-		}
-
-		l.Info("Successfully created output directory")
-	}
+	os.Mkdir("../output", os.ModePerm)
 
 	c, err := config.ReadConfig()
 	if err != nil {

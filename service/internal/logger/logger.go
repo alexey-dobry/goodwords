@@ -1,11 +1,16 @@
 package logger
 
 import (
+	"os"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 func InitLogger() (*zap.SugaredLogger, error) {
+
+	os.MkdirAll("../logs", os.ModePerm)
+
 	config := zap.Config{
 		Encoding:         "console",
 		Level:            zap.NewAtomicLevelAt(zap.InfoLevel),

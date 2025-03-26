@@ -9,7 +9,6 @@ import (
 	"github.com/alexey-dobry/goodwords/internal/analyser"
 	"github.com/alexey-dobry/goodwords/internal/config"
 	"github.com/alexey-dobry/goodwords/internal/logger"
-	"github.com/alexey-dobry/goodwords/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,8 +20,8 @@ func TestTextResponseWithBadWord(t *testing.T) {
 
 	mockConfig := config.Config{
 		BadWords: []string{"bad gopher", "good python"},
-		ListOfEndpoints: []models.EndpointData{
-			models.EndpointData{
+		ListOfEndpoints: []config.ConfigEndpointData{
+			config.ConfigEndpointData{
 				URL:        server.URL,
 				MaxTime:    5,
 				MaxRetries: 5,
@@ -65,8 +64,8 @@ func TestArrayResponseWithBadWord(t *testing.T) {
 
 	mockConfig := config.Config{
 		BadWords: []string{"bad gopher", "good python"},
-		ListOfEndpoints: []models.EndpointData{
-			models.EndpointData{
+		ListOfEndpoints: []config.ConfigEndpointData{
+			config.ConfigEndpointData{
 				URL:        server.URL,
 				MaxTime:    5,
 				MaxRetries: 5,
@@ -111,8 +110,8 @@ func TestArrayResponseWithBadWord(t *testing.T) {
 func TestNoResponseWithBadWord(t *testing.T) {
 	mockConfig := config.Config{
 		BadWords: []string{"bad gopher"},
-		ListOfEndpoints: []models.EndpointData{
-			models.EndpointData{
+		ListOfEndpoints: []config.ConfigEndpointData{
+			config.ConfigEndpointData{
 				URL:        "http://localhost:8001",
 				MaxTime:    5,
 				MaxRetries: 5,

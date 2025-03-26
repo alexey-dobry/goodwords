@@ -2,28 +2,41 @@ package analyser
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"sync"
 	"time"
 
 	"github.com/alexey-dobry/goodwords/internal/config"
-	"github.com/alexey-dobry/goodwords/internal/models"
 	"go.uber.org/zap"
 )
 
+type ReturnDatatype string
+
+const (
+	ReturnText  = "text"
+	ReturnArray = "array"
+)
+
 type analizationResult struct {
-	FoundBadWords [][2]string
+	FoundBadWords []badWord
 	URL           string
-	DataType      string
+	DataType      ReturnDatatype
 	Err           error
 }
 
-func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, ed models.EndpointData, badWords []string) {
+type badWord struct {
+	Word      string
+	ExprIndex int
+	Index     int
+}
+
+func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, ed config.ConfigEndpointData, badWords []string) {
 	var err error
 	var response *http.Response
+	defer wg.Done()
 
 	var result = analizationResult{
 		URL: ed.URL,
@@ -39,9 +52,8 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 		if err == nil {
 			break
 		} else if i == ed.MaxRetries-1 {
-			result.Err = fmt.Errorf("too many retries")
+			result.Err = errors.New("too many retries")
 			resultChan <- result
-			wg.Done()
 			return
 		}
 	}
@@ -49,59 +61,53 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 	if err != nil {
 		result.Err = err
 		resultChan <- result
-		wg.Done()
 		return
 	}
 
-	if response.Status != "200 OK" {
-		result.Err = fmt.Errorf("Response staus: ", response.Status)
+	if response.StatusCode != 200 {
+		result.Err = errors.New(fmt.Sprintf("Response staus: %s", response.StatusCode))
 		resultChan <- result
-		wg.Done()
 		return
 	}
 
-	if ed.ReturnData == "text" {
+	if ed.ReturnData == ReturnText {
 		var responseContents string
 
 		err = json.NewDecoder(response.Body).Decode(&responseContents)
 		if err != nil {
-			result.Err = fmt.Errorf("Error parsing data from endpoint")
+			result.Err = errors.New("Error parsing data from endpoint")
 			resultChan <- result
-			wg.Done()
 			return
 		}
 
 		result.FoundBadWords = textDetectBadWords(responseContents, badWords)
-		result.DataType = "text"
+		result.DataType = ReturnText
 
 		resultChan <- result
-		wg.Done()
 		return
 
-	} else if ed.ReturnData == "array" {
+	} else if ed.ReturnData == ReturnArray {
 		var responseContents []string
 
 		err = json.NewDecoder(response.Body).Decode(&responseContents)
 		if err != nil {
-			result.Err = fmt.Errorf("Error parsing data from endpoint")
+			result.Err = errors.New("Error parsing data from endpoint")
 			resultChan <- result
-			wg.Done()
 			return
 		}
 
 		result.FoundBadWords = arrayDetectBadWords(responseContents, badWords)
-		result.DataType = "array"
+		result.DataType = ReturnArray
 
 		resultChan <- result
-		wg.Done()
 		return
 	}
 
-	err = fmt.Errorf("Wrong return datatype on endpoint: %s", ed.URL)
+	err = errors.New(fmt.Sprintf("Wrong return datatype on endpoint: %s", ed.URL))
 	result.Err = err
 
 	resultChan <- result
-	wg.Done()
+	return
 }
 
 func SendRequests(c *config.Config, l *zap.SugaredLogger) []byte {
@@ -112,9 +118,9 @@ func SendRequests(c *config.Config, l *zap.SugaredLogger) []byte {
 	for _, endpointData := range c.ListOfEndpoints {
 		wg.Add(1)
 
-		go func(wg *sync.WaitGroup, recieverChan chan analizationResult, data models.EndpointData, c *config.Config) {
-			requestAndAnalize(wg, recieverChan, data, c.BadWords)
-		}(&wg, recieverChan, endpointData, c)
+		go func() {
+			requestAndAnalize(&wg, recieverChan, endpointData, c.BadWords)
+		}()
 
 	}
 
@@ -123,44 +129,34 @@ func SendRequests(c *config.Config, l *zap.SugaredLogger) []byte {
 		close(recieverChan)
 	}()
 
-	outputResultChan := make(chan map[string]interface{}, 1)
+	outputResult := map[string]interface{}{}
 
-	go func(ch chan<- map[string]interface{}) {
-		outputResult := map[string]interface{}{}
+	for recievedData := range recieverChan {
+		if recievedData.Err != nil && recievedData.Err == fmt.Errorf("too many retries") {
+			outputResult[recievedData.URL] = "too many retries"
 
-		for recievedData := range recieverChan {
-			if recievedData.Err != nil && recievedData.Err.Error() == "too many retries" {
-				outputResult[recievedData.URL] = "too many retries"
+			l.Error("Error occured while requesting and analysing the data from ", recievedData.URL, " : ", recievedData.Err)
 
-				l.Error("Error occured while requesting and analyzing the data from ", recievedData.URL, " : ", recievedData.Err)
+		} else if recievedData.Err != nil {
+			l.Error("Error occured while requesting and analysing the data from ", recievedData.URL, " : ", recievedData.Err)
 
-			} else if recievedData.Err != nil {
-				l.Error("Error occured while requesting and analyzing the data from ", recievedData.URL, " : ", recievedData.Err)
+		} else {
+			outputResult[recievedData.URL] = formatAnalisationResult(recievedData)
 
-			} else {
-				outputResult[recievedData.URL] = formatAnalizationResult(recievedData)
-
-				l.Info("Successfully analyzed data from ", recievedData.URL)
-
-			}
+			l.Info("Successfully analysed data from ", recievedData.URL)
 		}
+	}
 
-		outputResultChan <- outputResult
-
-	}(outputResultChan)
-
-	formatedJSON, err := json.MarshalIndent(<-outputResultChan, "", "    ")
+	formatedJSON, err := json.MarshalIndent(outputResult, "", "    ")
 	if err != nil {
 		l.Error("Error marshalling data into json")
 	}
-
-	close(outputResultChan)
 
 	return formatedJSON
 }
 
 func RunAnalyser(c *config.Config, l *zap.SugaredLogger) {
-	var outputFile string = fmt.Sprintf("../output/%s.json", strconv.FormatInt(time.Now().Unix(), 10))
+	var outputFile string = fmt.Sprintf("../output/%d.json", time.Now().Unix())
 
 	formatedJSON := SendRequests(c, l)
 

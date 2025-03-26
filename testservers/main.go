@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -20,5 +21,6 @@ func main() {
 		json.NewEncoder(w).Encode([]string{"hello what bad GOpher", "hello good python bad GOpher"})
 	})
 
+	log.Print("Test servers are up and running")
 	http.ListenAndServe(":8000", r1)
 }

@@ -1,26 +1,23 @@
 package analyser
 
-import (
-	"strconv"
-	"strings"
-)
+import "strings"
 
-func textDetectBadWords(data string, badwords []string) [][2]string {
-	result := make([][2]string, 0, 5)
+func textDetectBadWords(data string, badwords []string) []badWord {
+	result := make([]badWord, 0)
 
 	data = strings.ToLower(data)
 
 	for _, badValue := range badwords {
 		if index := strings.Index(data, strings.ToLower(badValue)); index != -1 {
-			result = append(result, [2]string{strconv.Itoa(index), strings.ToLower(badValue)})
+			result = append(result, badWord{badValue, 0, index})
 		}
 	}
 
 	return result
 }
 
-func arrayDetectBadWords(data []string, badwords []string) [][2]string {
-	result := make([][2]string, 0, 5)
+func arrayDetectBadWords(data []string, badwords []string) []badWord {
+	result := make([]badWord, 0)
 
 	for stringIndex, stringValue := range data {
 
@@ -30,9 +27,7 @@ func arrayDetectBadWords(data []string, badwords []string) [][2]string {
 
 			if index := strings.Index(stringValue, strings.ToLower(badValue)); index != -1 {
 
-				index_of_val := strconv.Itoa(index) + "/" + strconv.Itoa(stringIndex)
-
-				result = append(result, [2]string{index_of_val, strings.ToLower(badValue)})
+				result = append(result, badWord{badValue, stringIndex, index})
 			}
 		}
 	}
