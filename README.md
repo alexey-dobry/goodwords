@@ -1,5 +1,5 @@
 # GoodWords
-> Service designed to find specified "bad words" in endpoinds responces
+> Service designed to find specified "bad words" in endpoints responses
 
 ## Requirements
 #### General:
@@ -42,12 +42,12 @@ return_data = "text"
 ##### list_of_endpoints is a list of endpoints data where:
 - url is a... URL 
 - max_time is a maximum time client will wait for endpoint response
-- max_retries is a... maximum ammount of retries to get enpoint data
+- max_retries is a... maximum amount of retries to get endpoint data
 - return_data is a datatype which endpoint return. Can be either "text" or "array". 
 
 ## Running
 #### Without Docker
-In project's root directory
+In project's root directory run:
 ```
 cd ./service
 
@@ -61,12 +61,23 @@ Main.exe
 ```
 
 #### With Docker
+
+In project's root directory run:
 ```
 //For Windows
 docker-compose up
 
 //For Linux
 docker compose up
+```
+
+# Testing
+
+To test service run:
+```
+cd ./service
+
+go test
 ```
 
 ## Response examples

@@ -42,11 +42,11 @@ func TestTextResponseWithBadWord(t *testing.T) {
 				"total_count": 2,
 				"words": []map[string]interface{}{
 					map[string]interface{}{
-						"index": "11",
+						"index": 11,
 						"word":  "bad gopher",
 					},
 					map[string]interface{}{
-						"index": "22",
+						"index": 22,
 						"word":  "good python",
 					},
 				},
@@ -86,18 +86,18 @@ func TestArrayResponseWithBadWord(t *testing.T) {
 				"total_count": 3,
 				"words": []map[string]interface{}{
 					map[string]interface{}{
-						"expr_index": "0",
-						"index":      "11",
+						"expr_index": 0,
+						"index":      11,
 						"word":       "bad gopher",
 					},
 					map[string]interface{}{
-						"expr_index": "1",
-						"index":      "18",
+						"expr_index": 1,
+						"index":      18,
 						"word":       "bad gopher",
 					},
 					map[string]interface{}{
-						"expr_index": "1",
-						"index":      "6",
+						"expr_index": 1,
+						"index":      6,
 						"word":       "good python",
 					},
 				},
