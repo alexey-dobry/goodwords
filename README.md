@@ -196,6 +196,6 @@ nothing because nothing runs on localhost:8001
         "total_count": 0,
         "words": null
     },
-    "http://localhost:8000/three": "too many retries" //output result if program can't get data after "max_retries" retries attempts
+    "http://localhost:8001/three": "too many retries" //output result if program can't get data after "max_retries" retries attempts
 }
 ```
