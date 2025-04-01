@@ -1,6 +1,6 @@
-package analyser
+package analyzer
 
-func formatAnalisationResult(ar analizationResult) map[string]interface{} {
+func formatAnalizationResult(ar analizationResult) map[string]interface{} {
 	var formatResult = map[string]interface{}{}
 
 	formatResult["total_count"] = len(ar.FoundBadWords)

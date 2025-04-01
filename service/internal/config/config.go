@@ -34,7 +34,7 @@ func ReadConfig() (*Config, error) {
 	}
 
 	if err := cfg.UnmarshalKey("bad_words", &configData.BadWords); err != nil {
-		return nil, fmt.Errorf("Failed to write prohibied_words data from config: %s", err)
+		return nil, fmt.Errorf("Failed to write prohibited_words data from config: %s", err)
 	}
 
 	if err := cfg.UnmarshalKey("list_of_endpoints", &configData.ListOfEndpoints); err != nil {
@@ -42,7 +42,7 @@ func ReadConfig() (*Config, error) {
 	}
 
 	if err := V.Struct(configData); err != nil {
-		return nil, fmt.Errorf("Config data validatiopn failed: %s", err)
+		return nil, fmt.Errorf("Config data validation failed: %s", err)
 	}
 
 	return &configData, nil

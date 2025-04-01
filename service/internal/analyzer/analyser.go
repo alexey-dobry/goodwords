@@ -1,4 +1,4 @@
-package analyser
+package analyzer
 
 import (
 	"encoding/json"
@@ -32,7 +32,7 @@ type badWord struct {
 	Index     int
 }
 
-func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, ed config.ConfigEndpointData, badWords []string) {
+func requestAndAnalyze(wg *sync.WaitGroup, resultChan chan<- analizationResult, ed config.ConfigEndpointData, badWords []string) {
 	var err error
 	var response *http.Response
 	defer wg.Done()
@@ -64,7 +64,7 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 	}
 
 	if response.StatusCode != 200 {
-		result.Err = fmt.Errorf("Response staus: %s", response.StatusCode)
+		result.Err = fmt.Errorf("response status code : %d", response.StatusCode)
 		resultChan <- result
 		return
 	}
@@ -74,7 +74,7 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 
 		err = json.NewDecoder(response.Body).Decode(&responseContents)
 		if err != nil {
-			result.Err = fmt.Errorf("Error parsing data from endpoint")
+			result.Err = fmt.Errorf("error parsing data from endpoint")
 			resultChan <- result
 			return
 		}
@@ -90,7 +90,7 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 
 		err = json.NewDecoder(response.Body).Decode(&responseContents)
 		if err != nil {
-			result.Err = fmt.Errorf("Error parsing data from endpoint")
+			result.Err = fmt.Errorf("error parsing data from endpoint")
 			resultChan <- result
 			return
 		}
@@ -102,7 +102,7 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 		return
 	}
 
-	err = fmt.Errorf("Wrong return datatype on endpoint: %s", ed.URL)
+	err = fmt.Errorf("wrong return datatype on endpoint")
 	result.Err = err
 
 	resultChan <- result
@@ -112,59 +112,55 @@ func requestAndAnalize(wg *sync.WaitGroup, resultChan chan<- analizationResult, 
 func SendRequests(c *config.Config, l *zap.SugaredLogger) []byte {
 	var wg sync.WaitGroup
 
-	recieverChan := make(chan analizationResult)
+	receiverChan := make(chan analizationResult)
 
 	for _, endpointData := range c.ListOfEndpoints {
 		wg.Add(1)
 
 		go func() {
-			requestAndAnalize(&wg, recieverChan, endpointData, c.BadWords)
+			requestAndAnalyze(&wg, receiverChan, endpointData, c.BadWords)
 		}()
 
 	}
 
 	go func() {
 		wg.Wait()
-		close(recieverChan)
+		close(receiverChan)
 	}()
 
 	outputResult := map[string]interface{}{}
 
-	for recievedData := range recieverChan {
-		if recievedData.Err != nil && recievedData.Err.Error() == "too many retries" {
-			outputResult[recievedData.URL] = "too many retries"
+	for receivedData := range receiverChan {
+		if receivedData.Err != nil {
+			outputResult[receivedData.URL] = receivedData.Err.Error()
 
-			l.Error("Error occured while requesting and analysing the data from ", recievedData.URL, " : ", recievedData.Err)
-
-		} else if recievedData.Err != nil {
-			l.Error("Error occured while requesting and analysing the data from ", recievedData.URL, " : ", recievedData.Err)
-
+			l.Error("Error occurred while requesting and analyzing the data from ", receivedData.URL, " : ", receivedData.Err)
 		} else {
-			outputResult[recievedData.URL] = formatAnalisationResult(recievedData)
+			outputResult[receivedData.URL] = formatAnalizationResult(receivedData)
 
-			l.Info("Successfully analysed data from ", recievedData.URL)
+			l.Info("Successfully analyzed data from ", receivedData.URL)
 		}
 	}
 
-	formatedJSON, err := json.MarshalIndent(outputResult, "", "    ")
+	formattedJSON, err := json.MarshalIndent(outputResult, "", "    ")
 	if err != nil {
 		l.Error("Error marshalling data into json")
 	}
 
-	return formatedJSON
+	return formattedJSON
 }
 
-func RunAnalyser(c *config.Config, l *zap.SugaredLogger) {
+func RunAnalyzer(c *config.Config, l *zap.SugaredLogger) {
 	var outputFile string = fmt.Sprintf("../output/%d.json", time.Now().Unix())
 
-	formatedJSON := SendRequests(c, l)
+	formattedJSON := SendRequests(c, l)
 
 	file, err := os.Create(outputFile)
 	if err != nil {
 		l.Fatalf("Error occurred while trying to create output file: %s", err)
 	}
 
-	_, err = file.Write(formatedJSON)
+	_, err = file.Write(formattedJSON)
 	if err != nil {
 		l.Error("Failed to write data into file")
 	}

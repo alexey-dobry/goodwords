@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/alexey-dobry/goodwords/internal/analyser"
+	"github.com/alexey-dobry/goodwords/internal/analyzer"
 	"github.com/alexey-dobry/goodwords/internal/config"
 	"github.com/alexey-dobry/goodwords/internal/logger"
 )
@@ -26,7 +26,7 @@ func main() {
 
 	l.Info("Successfully read config")
 
-	analyser.RunAnalyser(c, l)
+	analyzer.RunAnalyzer(c, l)
 
-	l.Info("Programm execution complete")
+	l.Info("Program execution complete")
 }
